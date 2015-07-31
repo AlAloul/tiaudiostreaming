@@ -2,7 +2,9 @@
 # this is your module manifest and used by Titanium
 # during compilation, packaging, distribution, etc.
 #
-version: 0.1
+version: 0.2
+apiversion: 2
+architectures: armv7 arm64 i386 x86_64
 description: My module
 author: Your Name
 license: Specify your license
@@ -14,4 +16,4 @@ name: tiaudiostreaming
 moduleid: com.tiaudiostreaming
 guid: dc71a669-2f7d-4be7-9275-8e711d09fb4d
 platform: iphone
-minsdk: 1.6.0
+minsdk: 4.1.0.GA

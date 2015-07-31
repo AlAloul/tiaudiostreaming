@@ -25,6 +25,7 @@
 @property (nonatomic, readonly) NSNumber *idle;
 @property (nonatomic, readonly) NSNumber *waiting;
 @property (nonatomic, readonly) NSNumber *playing;
+@property (nonatomic, readonly) NSNumber *paused; // Kosso Ti.Media.audioPlayer compat
 @property (nonatomic, readonly) NSNumber *state;
 @property (nonatomic, readonly) NSNumber *errorCode;
 @property (nonatomic, readonly) NSNumber *duration;
@@ -42,6 +43,21 @@
 @property (nonatomic, readonly) NSNumber *STATE_STOPPING;
 @property (nonatomic, readonly) NSNumber *STATE_STOPPED;
 @property (nonatomic, readonly) NSNumber *STATE_PAUSED;
+/*
+typedef enum
+{
+	AS_INITIALIZED = 0,
+	AS_STARTING_FILE_THREAD,
+	AS_WAITING_FOR_DATA,
+	AS_FLUSHING_EOF,
+	AS_WAITING_FOR_QUEUE_TO_START,
+	AS_PLAYING,
+	AS_BUFFERING,
+	AS_STOPPING,
+	AS_STOPPED,
+	AS_PAUSED
+} AudioStreamerState;
+*/
 
 @property (nonatomic, readonly) NSNumber *ERR_NO_ERROR;
 @property (nonatomic, readonly) NSNumber *ERR_NETWORK_CONNECTION_FAILED;

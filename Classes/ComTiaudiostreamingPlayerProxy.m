@@ -13,6 +13,7 @@
 @synthesize idle;
 @synthesize waiting;
 @synthesize playing;
+@synthesize paused; // Kosso : for Ti.Media.audioPLayer compatibility
 @synthesize state;
 @synthesize errorCode;
 @synthesize duration;
@@ -27,14 +28,14 @@
         {
             if (streamer.duration > 0)
             {
-                double currentProgress = streamer.progress;
+                double currentProgress = streamer.progress; // Kosso make ms.
                 if(currentProgress!= lastProgress){
                     lastProgress = currentProgress;
                     NSDictionary *event = [NSDictionary dictionaryWithObjectsAndKeys:
-                                           NUMDOUBLE(currentProgress),  @"progress",
-                                           NUMDOUBLE(streamer.duration),@"duration",
-                                           self,					    @"source",
-                                           @"progress",                 @"type",nil];
+                                           NUMDOUBLE(currentProgress * 1000),      @"progress",
+                                           NUMDOUBLE(streamer.duration * 1000),    @"duration", // Kosso make ms
+                                           self,					               @"source",
+                                           @"progress",                            @"type",nil];
                     [self fireEvent:@"progress" withObject:event];
                 }
             }
@@ -42,13 +43,71 @@
 	}
 }
 
+/*
+    AS_INITIALIZED = 0,
+    AS_STARTING_FILE_THREAD,
+    AS_WAITING_FOR_DATA,
+    AS_FLUSHING_EOF,
+    AS_WAITING_FOR_QUEUE_TO_START,
+    AS_PLAYING,
+    AS_BUFFERING,
+    AS_STOPPING,
+    AS_STOPPED,
+    AS_PAUSED
+*/
+-(NSString*)stateToString:(int)state
+{
+    switch(state)
+    {
+        case 0:
+            return @"initialized";
+        case 1:
+            return @"starting";
+        case 2:
+            return @"waiting_for_data";
+        case 3:
+            return @"flushing_eof";    
+        case 4:
+            return @"waiting_for_queue";
+        case 5:
+            return @"playing";
+        case 6:
+            return @"buffering";
+        case 7:
+            return @"stopping";
+        case 8:
+            return @"stopped";
+        case 9:
+            return @"paused";
+        default:
+            return @"unknown";   
+    }
+    //return @"unknown";  
+}
+
+-(NSString*)stateDescription:(id)arg
+{
+    ENSURE_SINGLE_ARG(arg,NSNumber);
+    return [self stateToString:[TiUtils intValue:arg]];
+}
+
+
 - (void)stateChanged
 {
-	NSDictionary *event = [NSDictionary dictionaryWithObjectsAndKeys:
+    // Needs description....
+	/*
+    NSDictionary *event = [NSDictionary dictionaryWithObjectsAndKeys:
 						   NUMINT(streamer.state),@"state",
 						   self,				  @"source",
 						   @"change",			  @"type",nil];
-	
+	*/
+    NSDictionary *event = [NSDictionary dictionaryWithObjectsAndKeys:
+                            [self state],                       @"state",
+                            [self stateDescription:[self state]],  @"description",
+                            self,                               @"source",
+                            @"bar",                             @"foo",
+                            @"change",                          @"type",nil];
+
 	[self fireEvent:@"change" withObject:event];
 }
 
@@ -120,6 +179,10 @@
 {
 	return NUMBOOL([streamer isPlaying]);
 }
+- (id)paused // compat Kosso
+{
+    return NUMBOOL([streamer isPaused]);
+}
 
 - (id)state
 {
@@ -133,12 +196,12 @@
 
 - (id)duration
 {
-	return NUMDOUBLE([streamer duration]);
+	return NUMDOUBLE([streamer duration] * 1000); // Kosso : make ms
 }
 
 - (id)progress
 {
-	return NUMDOUBLE([streamer progress]);
+	return NUMDOUBLE([streamer progress] * 1000); // Kosso : make ms
 }
 
 - (id)bitRate
@@ -227,16 +290,30 @@ ERR(AUDIO_BUFFER_TOO_SMALL)
     {
 		ENSURE_SINGLE_ARG(args, NSNumber)
 		double newSeekTime = [args doubleValue];
-		dispatch_sync(dispatch_get_main_queue(), ^{
-			[streamer seekToTime:newSeekTime];
-		});
+
+       // @synchronized(self) {
+            [streamer seekToTime:newSeekTime];
+        //}
+		//dispatch_sync(dispatch_get_main_queue(), ^{
+		//	[streamer seekToTime:newSeekTime];
+		//});
 	}
 }
 
+-(id)volume
+{
+    if (streamer != nil){
+        volume = [streamer volume];
+    }
+    return NUMFLOAT(volume);
+}
+
+/*
 - (id)volume
 {
     return NUMFLOAT(volume);
 }
+*/
 
 - (void)setVolume:(NSNumber *)value
 {
